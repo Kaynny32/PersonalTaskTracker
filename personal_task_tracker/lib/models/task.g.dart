@@ -159,17 +159,18 @@ Task _taskDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Task();
-  object.completedAt = reader.readDateTimeOrNull(offsets[0]);
-  object.createdAt = reader.readDateTime(offsets[1]);
-  object.description = reader.readString(offsets[2]);
-  object.dueDate = reader.readDateTimeOrNull(offsets[3]);
+  final object = Task(
+    completedAt: reader.readDateTimeOrNull(offsets[0]),
+    createdAt: reader.readDateTime(offsets[1]),
+    description: reader.readString(offsets[2]),
+    dueDate: reader.readDateTimeOrNull(offsets[3]),
+    isCompleted: reader.readBool(offsets[4]),
+    priority: reader.readLong(offsets[5]),
+    status: _TaskstatusValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+        TaskStatus.pending,
+    title: reader.readString(offsets[7]),
+  );
   object.id = id;
-  object.isCompleted = reader.readBool(offsets[4]);
-  object.priority = reader.readLong(offsets[5]);
-  object.status = _TaskstatusValueEnumMap[reader.readByteOrNull(offsets[6])] ??
-      TaskStatus.pending;
-  object.title = reader.readString(offsets[7]);
   return object;
 }
 

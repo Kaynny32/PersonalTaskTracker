@@ -4,7 +4,8 @@ part 'task.g.dart';
 
 @collection
 class Task {
-  Id id =Isar.autoIncrement;
+  Id id = Isar.autoIncrement;
+  
   @Index()
   late String title;
 
@@ -24,6 +25,18 @@ class Task {
   
   @Index()
   late int priority; // 0: низкий, 1: средний, 2: высокий
+
+  // Добавьте конструктор для удобства
+  Task({
+    required this.title,
+    required this.description,
+    required this.isCompleted,
+    required this.status,
+    required this.createdAt,
+    required this.priority,
+    this.dueDate,
+    this.completedAt,
+  });
 }
 
 enum TaskStatus {
