@@ -5,6 +5,8 @@ part 'task.g.dart';
 @collection
 class Task {
   Id id = Isar.autoIncrement;
+  @Index()
+  late int idTask;
   
   @Index()
   late String title;
@@ -28,6 +30,7 @@ class Task {
 
   // Добавьте конструктор для удобства
   Task({
+    required this.idTask,
     required this.title,
     required this.description,
     required this.isCompleted,

@@ -65,10 +65,50 @@ class _BodyTaskListState extends State<BodyTaskList> {
     }
   }
 
+  // Функция для обработки редактирования задачи
+  Future<void> _handleTaskEdited(Task updatedTask) async {
+    final taskDatabase = Provider.of<TaskDatabase>(context, listen: false);
+    
+    try {
+      await taskDatabase.updateTask(
+        idTask: updatedTask.id,
+        title: updatedTask.title,
+        description: updatedTask.description,
+        isCompleted: updatedTask.isCompleted,
+        status: updatedTask.status,
+        priority: updatedTask.priority,
+        dueDate: updatedTask.dueDate,
+        completedAt: updatedTask.completedAt,
+      );
+      
+      // Автоматически обновляется через ChangeNotifier
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating task: $e')),
+      );
+    }
+  }
+
+  // Функция для обработки удаления задачи
+  Future<void> _handleTaskDeleted(String taskId) async {
+    final taskDatabase = Provider.of<TaskDatabase>(context, listen: false);
+    
+    try {
+      await taskDatabase.deleteTask(int.parse(taskId));
+      
+      // Автоматически обновляется через ChangeNotifier
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting task: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Removed unused local variable 'taskDatabase'
-
     return Stack(
       children: [
         SafeArea(
@@ -134,6 +174,8 @@ class _BodyTaskListState extends State<BodyTaskList> {
                                               // Отображаем задачи из базы данных
                                               ...taskDatabase.currentTasks.map((task) => TaskCard(
                                                     task: task,
+                                                    onEdit: _handleTaskEdited,
+                                                    onDelete: _handleTaskDeleted,
                                                   )).toList(),
                                               if (taskDatabase.currentTasks.isEmpty)
                                                 const Padding(

@@ -38,7 +38,7 @@ class TaskDatabase extends ChangeNotifier {
     }
   }
 
-  // Добавление задачи
+  // Добавление задачи (ИСПРАВЛЕНО: убрано обязательное поле idTask)
   Future<void> addTask({
     required String title,
     required String description,
@@ -49,7 +49,11 @@ class TaskDatabase extends ChangeNotifier {
   }) async {
     _checkInitialization();
 
+    // Генерируем уникальный idTask на основе времени
+    final idTask = DateTime.now().millisecondsSinceEpoch;
+
     final newTask = Task(
+      idTask: idTask,
       title: title,
       description: description,
       isCompleted: isCompleted,
@@ -57,7 +61,7 @@ class TaskDatabase extends ChangeNotifier {
       createdAt: DateTime.now(),
       priority: priority,
       dueDate: dueDate,
-      completedAt: null,
+      completedAt: isCompleted ? DateTime.now() : null,
     );
 
     await isar.writeTxn(() async {
@@ -75,16 +79,32 @@ class TaskDatabase extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Обновление задачи
+  // Обновление задачи (ИСПРАВЛЕНО: синхронизация isCompleted и completedAt)
   Future<void> updateTask(Task task) async {
     _checkInitialization();
+    
+    // Обновляем completedAt в зависимости от статуса выполнения
+    final updatedTask = Task(
+      idTask: task.idTask,
+      title: task.title,
+      description: task.description,
+      isCompleted: task.isCompleted,
+      status: task.status,
+      createdAt: task.createdAt,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      completedAt: task.isCompleted 
+        ? (task.completedAt ?? DateTime.now()) 
+        : null,
+    );
+
     await isar.writeTxn(() async {
-      await isar.tasks.put(task);
+      await isar.tasks.put(updatedTask);
     });
     await fetchTasks();
   }
 
-  // Удаление задачи
+  // Удаление задачи по Isar ID (не idTask)
   Future<void> deleteTask(int id) async {
     _checkInitialization();
     await isar.writeTxn(() async {
@@ -107,5 +127,11 @@ class TaskDatabase extends ChangeNotifier {
   Future<int> getTaskCount() async {
     _checkInitialization();
     return await isar.tasks.count();
+  }
+
+  // Новый метод для поиска задачи по idTask
+  Future<Task?> getTaskByIdTask(int idTask) async {
+    _checkInitialization();
+    return await isar.tasks.filter().idTaskEqualTo(idTask).findFirst();
   }
 }

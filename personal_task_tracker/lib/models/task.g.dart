@@ -37,24 +37,29 @@ const TaskSchema = CollectionSchema(
       name: r'dueDate',
       type: IsarType.dateTime,
     ),
-    r'isCompleted': PropertySchema(
+    r'idTask': PropertySchema(
       id: 4,
+      name: r'idTask',
+      type: IsarType.long,
+    ),
+    r'isCompleted': PropertySchema(
+      id: 5,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'priority': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'priority',
       type: IsarType.long,
     ),
     r'status': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'status',
       type: IsarType.byte,
       enumMap: _TaskstatusEnumValueMap,
     ),
     r'title': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'title',
       type: IsarType.string,
     )
@@ -65,6 +70,19 @@ const TaskSchema = CollectionSchema(
   deserializeProp: _taskDeserializeProp,
   idName: r'id',
   indexes: {
+    r'idTask': IndexSchema(
+      id: -8834540920739767380,
+      name: r'idTask',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'idTask',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
     r'title': IndexSchema(
       id: -7636685945352118059,
       name: r'title',
@@ -147,10 +165,11 @@ void _taskSerialize(
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeString(offsets[2], object.description);
   writer.writeDateTime(offsets[3], object.dueDate);
-  writer.writeBool(offsets[4], object.isCompleted);
-  writer.writeLong(offsets[5], object.priority);
-  writer.writeByte(offsets[6], object.status.index);
-  writer.writeString(offsets[7], object.title);
+  writer.writeLong(offsets[4], object.idTask);
+  writer.writeBool(offsets[5], object.isCompleted);
+  writer.writeLong(offsets[6], object.priority);
+  writer.writeByte(offsets[7], object.status.index);
+  writer.writeString(offsets[8], object.title);
 }
 
 Task _taskDeserialize(
@@ -164,11 +183,12 @@ Task _taskDeserialize(
     createdAt: reader.readDateTime(offsets[1]),
     description: reader.readString(offsets[2]),
     dueDate: reader.readDateTimeOrNull(offsets[3]),
-    isCompleted: reader.readBool(offsets[4]),
-    priority: reader.readLong(offsets[5]),
-    status: _TaskstatusValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+    idTask: reader.readLong(offsets[4]),
+    isCompleted: reader.readBool(offsets[5]),
+    priority: reader.readLong(offsets[6]),
+    status: _TaskstatusValueEnumMap[reader.readByteOrNull(offsets[7])] ??
         TaskStatus.pending,
-    title: reader.readString(offsets[7]),
+    title: reader.readString(offsets[8]),
   );
   object.id = id;
   return object;
@@ -190,13 +210,15 @@ P _taskDeserializeProp<P>(
     case 3:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
-    case 5:
       return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readBool(offset)) as P;
     case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
       return (_TaskstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           TaskStatus.pending) as P;
-    case 7:
+    case 8:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -232,6 +254,14 @@ extension TaskQueryWhereSort on QueryBuilder<Task, Task, QWhere> {
   QueryBuilder<Task, Task, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterWhere> anyIdTask() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'idTask'),
+      );
     });
   }
 
@@ -321,6 +351,94 @@ extension TaskQueryWhere on QueryBuilder<Task, Task, QWhereClause> {
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterWhereClause> idTaskEqualTo(int idTask) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'idTask',
+        value: [idTask],
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterWhereClause> idTaskNotEqualTo(int idTask) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'idTask',
+              lower: [],
+              upper: [idTask],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'idTask',
+              lower: [idTask],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'idTask',
+              lower: [idTask],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'idTask',
+              lower: [],
+              upper: [idTask],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterWhereClause> idTaskGreaterThan(
+    int idTask, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'idTask',
+        lower: [idTask],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterWhereClause> idTaskLessThan(
+    int idTask, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'idTask',
+        lower: [],
+        upper: [idTask],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterWhereClause> idTaskBetween(
+    int lowerIdTask,
+    int upperIdTask, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'idTask',
+        lower: [lowerIdTask],
+        includeLower: includeLower,
+        upper: [upperIdTask],
         includeUpper: includeUpper,
       ));
     });
@@ -967,6 +1085,58 @@ extension TaskQueryFilter on QueryBuilder<Task, Task, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Task, Task, QAfterFilterCondition> idTaskEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'idTask',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> idTaskGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'idTask',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> idTaskLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'idTask',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> idTaskBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'idTask',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterFilterCondition> isCompletedEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -1264,6 +1434,18 @@ extension TaskQuerySortBy on QueryBuilder<Task, Task, QSortBy> {
     });
   }
 
+  QueryBuilder<Task, Task, QAfterSortBy> sortByIdTask() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idTask', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterSortBy> sortByIdTaskDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idTask', Sort.desc);
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterSortBy> sortByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.asc);
@@ -1374,6 +1556,18 @@ extension TaskQuerySortThenBy on QueryBuilder<Task, Task, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Task, Task, QAfterSortBy> thenByIdTask() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idTask', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterSortBy> thenByIdTaskDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idTask', Sort.desc);
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterSortBy> thenByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.asc);
@@ -1449,6 +1643,12 @@ extension TaskQueryWhereDistinct on QueryBuilder<Task, Task, QDistinct> {
     });
   }
 
+  QueryBuilder<Task, Task, QDistinct> distinctByIdTask() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'idTask');
+    });
+  }
+
   QueryBuilder<Task, Task, QDistinct> distinctByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCompleted');
@@ -1503,6 +1703,12 @@ extension TaskQueryProperty on QueryBuilder<Task, Task, QQueryProperty> {
   QueryBuilder<Task, DateTime?, QQueryOperations> dueDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dueDate');
+    });
+  }
+
+  QueryBuilder<Task, int, QQueryOperations> idTaskProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'idTask');
     });
   }
 
